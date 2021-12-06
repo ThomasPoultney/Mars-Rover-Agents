@@ -57,8 +57,11 @@ MAS ia_submission {
 	
 		
 		/**** ADD YOUR AGENT(S) HERE *****/
-		steve scanner[capacity =0, scan_range=1, group=1];
-		steveo scanner[capacity =5, scan_range=1, group=5];
+		steve scanner[capacity=0, scan_range=1, group=1];
+		john scanner[capacity=0, scan_range=1, group=2];		
+		jeff scanner[capacity=0, scan_range=1, group=3];
+		sally scanner[capacity=0, scan_range=1, group=4];
+		
 		
 		
 	aslSourcePath:

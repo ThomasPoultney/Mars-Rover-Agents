@@ -14,7 +14,7 @@ currentID(1).
 /* Initial goals */
 
 !start.
-!get_next_action.
+
 /* Plans */
 
 
@@ -31,7 +31,8 @@ currentID(1).
 							  .print(Ag, " type is ", X).					  
 				  
 
-+!get_next_action : true <- .print("Calculating Next Action");								
+
++!get_next_action : true <- .print("Calculating Next Action");																	
 									if(finishedScanning(false)) {
 										!get_next_scan_spot;
 									}else {
@@ -42,11 +43,11 @@ currentID(1).
 										 ia_submission.debug_print_all_scanned(ListOfScanned, MapWidth, MapHeight);
 										.wait(40000);										
 									}
-									!get_next_action.																																		
+									!get_next_action
+									.																																	
 									
 									
-											  
-				  
+			  
 
 @check_configuration[atomic]
 +!check_configuaration :true <- .print("Checking and storing configuaration of agent and world");
@@ -84,9 +85,10 @@ currentID(1).
 						    !move_to_next_scan_spot(XPosition, YPosition, ScanLocationX, ScanLocationY).
 
 				    
--!get_next_scan_spot : true <- -+finishedScanning(true);
-							 	.print("No More Tiles to Scan or out of energy").
-							 			  
+-!get_next_scan_spot : true <- .print("Error finding a scan Location, Trying again").
+							   
+
+							 						   
 
 @move_to_next_scan_spot[atomic]
 +!move_to_next_scan_spot(CurrentX, CurrentY, TargetXPos, TargetYPos) : not((CurrentX == TargetXPos) & (CurrentY == TargetYPos)) <- 
@@ -102,24 +104,19 @@ currentID(1).
 																			  	ia_submission.astarsearch(X, Y, TargetXPos, TargetYPos, MapWidth, MapHeight, ListOfDiscoveredResources, ListOfScanned, XMoveOffSet, YMoveOffSet);
 																			  	!move_rover(XMoveOffSet, YMoveOffSet); 
 																			  }																			  
-																			  ?xPosition(X);
-																			  ?yPosition(Y);	
-																			  !move_to_next_scan_spot(X, Y, TargetXPos, TargetYPos);
+																			  !rover_scan;
 																			  .																		
 																			  
 
-+!move_to_next_scan_spot(X, Y, TargetXPos, TargetYPos) : (X == TargetXPos) & (Y == TargetYPos) <- .print("At Scan Locaiton, Scanning!");																								  
-																								  !rover_scan;
-																								  .
 																								
 																								
-																								  
+-!move_to_next_scan_spot(_,_,_,_) : true <- .print("unable to move to scan location").																								  
 																		 			   			 
 																		  
 				
 
 @rover_scan[atomic]
-+!rover_scan : true <- .print("Rover Scanning and then updating scanned Locations");
++!rover_scan : true <-   .print("Rover Scanning and then updating scanned Locations");
 						 ?scanRange(ScanRange);
 						 ?xPosition(X);
 						 ?yPosition(Y);
@@ -138,6 +135,8 @@ currentID(1).
 					      }
 					      .
 					      
+	
+					      
 @move_rover[atomic]	
 +!move_rover(XDist,YDist) : true <- 
 							move(XDist,YDist);
@@ -148,14 +147,6 @@ currentID(1).
 							rover.ia.log_movement(XDist, YDist);
 							!update_Position.
 							
-
--!move_rover(XDist,YDist) : true <- .print("Error Moving, Waiting then trying again");																																				
-									.random(X);
-									.wait(X * 5000).
-									//rover_scan(1);
-									
-														
-
 @update_Position[atomic]	
 +!update_Position : true <- ?mapWidth(MapWidth);
 						    ?mapHeight(MapHeight);

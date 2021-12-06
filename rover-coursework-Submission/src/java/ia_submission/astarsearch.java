@@ -39,45 +39,43 @@ public class astarsearch extends DefaultInternalAction {
         
         
         ListTerm ListOfObstacles =  (ListTerm) args[6];
-        //System.out.println("Obstacle list is " + ListOfObstacles);
-    	for (Term innerListAsTerm : ListOfObstacles) {
-    		
-    		ListTerm innerListAsListTerm =  (ListTerm) innerListAsTerm;
-    		
-    		// Note, we did not need to do much for strings, we just called the toString method
-    		String resourceType =  innerListAsListTerm.get(0).toString();
-    		String resource = resourceType.replace("\"", "");
-    		// log the itemName so we can see that we converted it successfully
-    		//System.out.println("Printing from an internal action :- " + resource);
-    		
-    		// Note we are still using NumberTerm for the number
-    		NumberTerm resourceXPositionTerm =  (NumberTerm) innerListAsListTerm.get(1);
-    		NumberTerm resourceYPositionTerm =  (NumberTerm) innerListAsListTerm.get(2);
-    		
-    		int resourceXPosition =  (int)resourceXPositionTerm.solve(); 
-    		int resourceYPosition =   (int)resourceYPositionTerm.solve();
-    		
-    		if(resource.equals("Obstacle")) {
-        		//System.out.println("IA: There is an obstacle at X: " + resourceXPosition + " Y: " + resourceYPosition);
-        		map[resourceXPosition][resourceYPosition].obstacle = true;
-
-    		}
-    		
-    	
-    	}
-    	
     	ListTerm ListOfScanned =  (ListTerm) args[7];
+
     	for (Term innerListAsTerm : ListOfScanned) {
 
 			ListTerm innerListAsListTerm = (ListTerm) innerListAsTerm;
 			// Note we are still using NumberTerm for the number
 			NumberTerm scannedXPositionTerm = (NumberTerm) innerListAsListTerm.get(0);
 			NumberTerm scannedYPositionTerm = (NumberTerm) innerListAsListTerm.get(1);
-		
+
 			int scannedXPosition = (int) scannedXPositionTerm.solve();
 			int scannedYPosition = (int) scannedYPositionTerm.solve();
 
 			map[scannedXPosition][scannedYPosition].scanned = true;
+			boolean scannedIsObstacle = false;
+
+			for (Term innerListAsTermObs : ListOfObstacles) {
+
+				ListTerm innerListAsListTermObs = (ListTerm) innerListAsTermObs;
+				// Note we are still using NumberTerm for the number
+				NumberTerm obstacleXPositionTerm = (NumberTerm) innerListAsListTermObs.get(1);
+				NumberTerm obstacleYPositionTerm = (NumberTerm) innerListAsListTermObs.get(2);
+
+				int obstacleXPosition = (int) obstacleXPositionTerm.solve();
+				int obstacleYPosition = (int) obstacleYPositionTerm.solve();
+
+				if (obstacleXPosition == scannedXPosition && obstacleYPosition == scannedYPosition) {
+					scannedIsObstacle = true;
+					
+				}
+			}
+
+			if (scannedIsObstacle == false) {
+				map[scannedXPosition][scannedYPosition].obstacle = false;
+			}
+
+			// System.out.println(map[scannedXPosition][scannedYPosition].xPosition + " " +
+			// map[scannedXPosition][scannedYPosition].yPosition);
 		}
 
         System.out.println("IA: Implementing A* Search from position X: " + xPosition + " Y: " + yPosition + " Target is X: " + targetXPosition + " Y: " + targetYPosition);
@@ -148,30 +146,38 @@ public class astarsearch extends DefaultInternalAction {
             }
             
             
+            
            // System.out.println('\n');
 
         } else {
             System.out.println("IA: no Path found");
         }
         
-        Node lastNode = endNode.get(endNode.size() -1);
-        
-        int count = 0;
-        for(Node neighbour : map[xPosition][yPosition].neighbours) {
-        	
-        	if(neighbour == lastNode) {
-        		break;
-        	} else {
-        		count++;
-        	}
-        	
+        if(endNode != null) {
+        	 Node lastNode = endNode.get(endNode.size() -1);
+             
+             int count = 0;
+             for(Node neighbour : map[xPosition][yPosition].neighbours) {
+             	
+             	if(neighbour == lastNode) {
+             		break;
+             	} else {
+             		count++;
+             	}
+             	
+             }
+             
+             int xMoveOffset = map[xPosition][yPosition].neighbourXOffsets.get(count);
+             int yMoveOffset = map[xPosition][yPosition].neighbourYOffsets.get(count);
+             
+             
+             return un.unifies(new NumberTermImpl(xMoveOffset), args[8]) & un.unifies(new NumberTermImpl(yMoveOffset), args[9]);
+        } else {
+        	return false;
         }
        
-        int xMoveOffset = map[xPosition][yPosition].neighbourXOffsets.get(count);
-        int yMoveOffset = map[xPosition][yPosition].neighbourYOffsets.get(count);
-        
-        
-        return un.unifies(new NumberTermImpl(xMoveOffset), args[8]) & un.unifies(new NumberTermImpl(yMoveOffset), args[9]);
+       
+    
     }
 
     private static List<Node> reconstruct_path(List<Node> cameFrom, Node current) {
