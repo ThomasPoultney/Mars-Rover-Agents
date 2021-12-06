@@ -57,8 +57,10 @@ MAS ia_submission {
 	
 		
 		/**** ADD YOUR AGENT(S) HERE *****/
-		scanningAgent[capacity =0, scan_range=6, group=1, mindinspector="gui(cycle,html,history)"];
-	
+		steve scanner[capacity =0, scan_range=1, group=1];
+		steveo scanner[capacity =5, scan_range=1, group=5];
+		
+		
 	aslSourcePath:
 		"src/asl";
 }

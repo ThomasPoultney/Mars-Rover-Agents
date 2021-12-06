@@ -1,22 +1,51 @@
+  
 // Agent scanner in project ia_submission
 
 /* Initial beliefs and rules */
+type(scanner).
 xPosition(0).
 yPosition(0).
 distanceTravelledX(0).
 distanceTravelledY(0).
+finishedScanning(false).
+maxCapacityOfCollectionRovers(5).
+currentID(1).
 
 /* Initial goals */
 
 !start.
-
+!get_next_action.
 /* Plans */
 
-+!start : true <- .print("Agent Starting Up");
+
++!start : true <- .print("Agent Starting Up");				     	  
 				  !check_configuaration;
-				  !get_next_scan_spot.
+				  !print_agent_types;
+				  !rover_scan;
+				  !get_next_action.
+				
+				 
+				  			 
+@print_agent_types[atomic]				
++!print_agent_types : true <- .findall(Ag, type(X,Ag), LAgs);
+							  .print(Ag, " type is ", X).					  
 				  
-				  
+
++!get_next_action : true <- .print("Calculating Next Action");								
+									if(finishedScanning(false)) {
+										!get_next_scan_spot;
+									}else {
+										.print("We have scanned all tiles :)");
+										.findall([XPos,YPos], scanned(XPos,YPos), ListOfScanned);
+										 ?mapWidth(MapWidth);
+	   									 ?mapHeight(MapHeight);	 															  											
+										 ia_submission.debug_print_all_scanned(ListOfScanned, MapWidth, MapHeight);
+										.wait(40000);										
+									}
+									!get_next_action.																																		
+									
+									
+											  
 				  
 
 @check_configuration[atomic]
@@ -30,7 +59,7 @@ distanceTravelledY(0).
 			     -+mapHeight(Height);			     
 			     !print_configuration.		
 			     
-@print_configuration[atomic]			     
+		     
 +! print_configuration : true <- 
 						  ?capacity(CurrentCapacity);
 	   					  ?scanRange(CurrentScanRange);
@@ -40,33 +69,52 @@ distanceTravelledY(0).
 						  .print("Robot configuration is: capacity: ",CurrentCapacity, " Scan Range: ",CurrentScanRange, " Resource to collect: ", CurrentResourceType);
 						  .print("Map Width is: ", Width, " Map Height is: ", Height).	
 
-@scan_next_spot[atomic]						  
+@get_next_scan_spot[atomic]					  
 +!get_next_scan_spot : true <- .print("Getting Next Scan Location");
 							?xPosition(XPosition);
 							?yPosition(YPosition);
 							?mapWidth(Width);
 	   					  	?mapHeight(Height);
-						    //.ia_submission.getNextScanLocation(XPosition, YPosition, Width, Height, ListOfScannedTiles, ScanLocationX, ScanLocationY);
-						    !move_to_next_scan_spot(4, 4).
+	   					  	.findall([XPos,YPos], scanned(XPos,YPos), ListOfScannedTiles);	
+	   					  	//.print(ListOfScannedTiles);
+							.findall([ResourceKind,XPos,YPos], obstacleAt(ResourceKind,XPos,YPos), ListOfDiscoveredObstacles);	    																	  	
+	   					  	//.print(ListOfDiscoveredObstacles);
+	   					  	?scanRange(ScanRange);
+						    ia_submission.getNextScanLocation(XPosition, YPosition, Width, Height, ListOfDiscoveredObstacles, ListOfScannedTiles, ScanRange, ScanLocationX, ScanLocationY);						    						    
+						    !move_to_next_scan_spot(XPosition, YPosition, ScanLocationX, ScanLocationY).
+
+				    
+-!get_next_scan_spot : true <- -+finishedScanning(true);
+							 	.print("No More Tiles to Scan or out of energy").
+							 			  
 
 @move_to_next_scan_spot[atomic]
-+!move_to_next_scan_spot(XPos, YPos) : not((X == XPos) & (Y == YPos)) <- .print("Moving to Next Scan Location");
++!move_to_next_scan_spot(CurrentX, CurrentY, TargetXPos, TargetYPos) : not((CurrentX == TargetXPos) & (CurrentY == TargetYPos)) <- 
+																			  .print("Moving to Next Scan Location X:", TargetXPos, " Y: ", TargetYPos);
 																		      ?mapWidth(MapWidth);
-	   																		  ?mapHeight(MapHeight);
-	   																		  
-																			  while((xPosition(X) & X \== XPos) | (yPosition(Y) & Y \== YPos)) {																			  															  	  
+	   																		  ?mapHeight(MapHeight);	   																		  
+																			  while((xPosition(X) & X \== TargetXPos) | (yPosition(Y) & Y \== TargetYPos)) {																			  															  	  
 																			  	?xPosition(X);
 																			  	?yPosition(Y);	
-																			  	.findall([ResourceKind,XPos,Ypos], obstacleAt(ResourceKind,XPos,Ypos), ListOfDiscoveredResources);	    																	  	
-																			  	ia_submission.astarsearch(X, Y, XPos, YPos, MapWidth, MapHeight, ListOfDiscoveredResources, XMoveOffSet, YMoveOffSet);
+																			  	.findall([ResourceKind,XPos,YPos], obstacleAt(ResourceKind,XPos,YPos), ListOfDiscoveredResources);	
+																			  	//.print(ListOfDiscoveredResources);    			
+																			  	.findall([XPos,YPos], scanned(XPos,YPos), ListOfScanned);															  	
+																			  	ia_submission.astarsearch(X, Y, TargetXPos, TargetYPos, MapWidth, MapHeight, ListOfDiscoveredResources, ListOfScanned, XMoveOffSet, YMoveOffSet);
 																			  	!move_rover(XMoveOffSet, YMoveOffSet); 
-																			  }
-																			
-	
-																			  .
+																			  }																			  
+																			  ?xPosition(X);
+																			  ?yPosition(Y);	
+																			  !move_to_next_scan_spot(X, Y, TargetXPos, TargetYPos);
+																			  .																		
+																			  
 
-+!move_to_next_scan_spot(X,Y, XPos, YPos) : (X == XPos) & (Y == YPos) <- .print("Already at Scan Location, Scanning!");
-																		 !rover_scan.
++!move_to_next_scan_spot(X, Y, TargetXPos, TargetYPos) : (X == TargetXPos) & (Y == TargetYPos) <- .print("At Scan Locaiton, Scanning!");																								  
+																								  !rover_scan;
+																								  .
+																								
+																								
+																								  
+																		 			   			 
 																		  
 				
 
@@ -74,19 +122,39 @@ distanceTravelledY(0).
 +!rover_scan : true <- .print("Rover Scanning and then updating scanned Locations");
 						 ?scanRange(ScanRange);
 						 ?xPosition(X);
-						 ?yPosition(Y).
-					    // .ia_submission.retrieve_tiles_scanned(X,Y,ScanRange, ListOFScannedTiles).
+						 ?yPosition(Y);
+						 ?mapWidth(MapWidth);
+	   					 ?mapHeight(MapHeight);	 
+						 scan(ScanRange);
+					     ia_submission.calculateScannedTiles(X, Y, ScanRange, MapWidth, MapHeight,  ListOFScannedTiles);
+					     //.print("The tiles that were scanned are", ListOFScannedTiles);	
+					     .length(ListOFScannedTiles, Length);  
+					     for (.range(I,0,Length-1)) {
+					      	.nth(I, ListOFScannedTiles, InnerList);
+					      	.nth(0, InnerList, XScannedPos);
+					      	.nth(1, InnerList, YScannedPos);
+					      	+scanned(XScannedPos, YScannedPos);
+					      	.broadcast(tell,scanned(XScannedPos, YScannedPos));
+					      }
+					      .
 					      
-					     //add belief for each tileScanned
-
 @move_rover[atomic]	
-+!move_rover(XDist,YDist) : true <- move(XDist,YDist);
++!move_rover(XDist,YDist) : true <- 
+							move(XDist,YDist);
 	   						?distanceTravelledX(X);
 							?distanceTravelledY(Y);
 							-+distanceTravelledX(X + XDist);
 							-+distanceTravelledY(Y + YDist);							
 							rover.ia.log_movement(XDist, YDist);
 							!update_Position.
+							
+
+-!move_rover(XDist,YDist) : true <- .print("Error Moving, Waiting then trying again");																																				
+									.random(X);
+									.wait(X * 5000).
+									//rover_scan(1);
+									
+														
 
 @update_Position[atomic]	
 +!update_Position : true <- ?mapWidth(MapWidth);
@@ -97,4 +165,55 @@ distanceTravelledY(0).
 						    ia_submission.returnModulus(YPosition,MapHeight, YResult);
 						    .print("position of rover relative to base is x: ", XResult, " y: ",YResult);
 						    -+xPosition(XResult);
-						    -+yPosition(YResult).	  
+						    -+yPosition(YResult).	
+
+ // go to resource found
+ @resource_found[atomic,priority(100000)]
+ +resource_found(ResourceType, Quantity, XDist, YDist):  true
+	<-   .print("Found Resource")
+		 ?xPosition(X);
+		 ?yPosition(Y);
+		 ?mapWidth(MapWidth);
+		 ?mapHeight(MapHeight);  
+		 ia_submission.returnModulus(XDist,MapWidth, NewXDist);
+		 ia_submission.returnModulus(YDist,MapHeight, NewYDist);	
+		 ia_submission.returnModulus(X+NewXDist, MapWidth, XResult);
+	     ia_submission.returnModulus(Y+NewYDist, MapHeight, YResult);
+	     if(ResourceType == "Obstacle") {
+	     	 .broadcast(tell, obstacleAt(ResourceType,XResult,YResult));	
+	     	 +obstacleAt(ResourceType,XResult,YResult)
+	     } else {
+	     	 +resourceAt(ResourceType,Quantity,XResult,YResult);
+	     	 ?maxCapacityOfCollectionRovers(MaxCap);	     	 
+	     	
+	     	 if(Quantity > MaxCap) {
+	     	 	.print("Collecting the Resource Takes Multiple Trips");
+	     	 	ia_submission.calcNumTrips(MaxCap, Quantity, ListOfTrips);	     	 		     	 		     	 	
+	     	 	.length(ListOfTrips, Length);  
+				for (.range(I,0,Length-1)) {
+					 ?currentID(CurrID);								      	
+					.nth(0, ListOfTrips, QuanForTrip);
+					 +miningEvent(ResourceType, QuanForTrip, XResult, YResult);
+					 .broadcast(tell,miningEvent(CurrID, ResourceType,QuanForTrip,XResult,YResult))	;					  					
+					  -+currentID(CurrID + I);
+				 }   	     	 	
+	     	 } else {
+	     	 	 +miningEvent(ResourceType, Quantity, XResult, YResult);
+	     	 	 .broadcast(tell,miningEvent(_,ResourceType,Quantity,XResult,YResult))	 	     	  
+	     	 }    		     	 
+	     	    
+	    	 //.broadcast(tell,resourceAt(ResourceType,Quantity,XResult,YResult))	
+	     }
+	     .  
+	     	
+
+ +resource_not_found: true
+   <-  	.print("I found nothing, I am moving again....").
+   
++scanned(T) [source(Ag)]: true <- .print("Message Received from", Ag, T).
+   
+    		  
+	     
+	    
+
+	

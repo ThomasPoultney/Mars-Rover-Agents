@@ -19,6 +19,7 @@ public class Node implements java.lang.Comparable<Node> {
 	
 	public double f = Double.MAX_VALUE;
 	public double g = Double.MAX_VALUE;
+	public boolean scanned = false;
 	
 	
 	public double h;

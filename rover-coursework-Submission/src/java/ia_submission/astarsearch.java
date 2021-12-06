@@ -39,15 +39,16 @@ public class astarsearch extends DefaultInternalAction {
         
         
         ListTerm ListOfObstacles =  (ListTerm) args[6];
-        
+        //System.out.println("Obstacle list is " + ListOfObstacles);
     	for (Term innerListAsTerm : ListOfObstacles) {
     		
     		ListTerm innerListAsListTerm =  (ListTerm) innerListAsTerm;
     		
     		// Note, we did not need to do much for strings, we just called the toString method
     		String resourceType =  innerListAsListTerm.get(0).toString();
+    		String resource = resourceType.replace("\"", "");
     		// log the itemName so we can see that we converted it successfully
-    		System.out.println("Printing from an internal action :- " + resourceType);
+    		//System.out.println("Printing from an internal action :- " + resource);
     		
     		// Note we are still using NumberTerm for the number
     		NumberTerm resourceXPositionTerm =  (NumberTerm) innerListAsListTerm.get(1);
@@ -56,16 +57,30 @@ public class astarsearch extends DefaultInternalAction {
     		int resourceXPosition =  (int)resourceXPositionTerm.solve(); 
     		int resourceYPosition =   (int)resourceYPositionTerm.solve();
     		
-    		if(resourceType == "Obstacle") {
-        		System.out.println("IA: There is an obstacle at X: " + resourceXPosition + " Y: " + resourceYPosition);
+    		if(resource.equals("Obstacle")) {
+        		//System.out.println("IA: There is an obstacle at X: " + resourceXPosition + " Y: " + resourceYPosition);
         		map[resourceXPosition][resourceYPosition].obstacle = true;
 
     		}
     		
     	
     	}
+    	
+    	ListTerm ListOfScanned =  (ListTerm) args[7];
+    	for (Term innerListAsTerm : ListOfScanned) {
 
-        System.out.println("Implementing A* Search from position X: " + xPosition + " Y: " + yPosition + " Target is X: " + targetXPosition + " Y: " + targetYPosition);
+			ListTerm innerListAsListTerm = (ListTerm) innerListAsTerm;
+			// Note we are still using NumberTerm for the number
+			NumberTerm scannedXPositionTerm = (NumberTerm) innerListAsListTerm.get(0);
+			NumberTerm scannedYPositionTerm = (NumberTerm) innerListAsListTerm.get(1);
+		
+			int scannedXPosition = (int) scannedXPositionTerm.solve();
+			int scannedYPosition = (int) scannedYPositionTerm.solve();
+
+			map[scannedXPosition][scannedYPosition].scanned = true;
+		}
+
+        System.out.println("IA: Implementing A* Search from position X: " + xPosition + " Y: " + yPosition + " Target is X: " + targetXPosition + " Y: " + targetYPosition);
 
         for (int x = 0; x < mapWidth; x++) {
             for (int y = 0; y < mapHeight; y++) {
@@ -119,39 +134,44 @@ public class astarsearch extends DefaultInternalAction {
                 // System.out.println("The position of north Neighbour is: " + northNeighbour.xPosition + " " + northNeighbour.yPosition);
                 //System.out.println("The position of south Neighbour is: " + southNeighbour.xPosition + " " + southNeighbour.yPosition);
                 //System.out.println("The position of north Neighbour is: " + northNeighbour.xPosition + " " + northNeighbour.yPosition);
-                int count = 0;
-                for (Node node : n.neighbours) {
-
-                    if (node.obstacle == true) {
-                        n.neighbours.remove(node);
-                        n.neighbourXOffsets.remove(count);
-                        n.neighbourYOffsets.remove(count);
-                        
-                    }
-                    count++;
-                }
+            
+                
             }
         }
 
         List<Node> endNode = aStar(map[xPosition][yPosition], map[targetXPosition][targetYPosition]);
         
         if (endNode != null) {
-            System.out.println("Path to end takes " + endNode.size() + "Moves.");           
+            //System.out.println("Path to end takes " + endNode.size() + "Moves.");           
             for (Node n : endNode) {
-                System.out.print(n.xPosition + " " + n.yPosition + '\t');
+               // System.out.print(n.xPosition + " " + n.yPosition + '\t');
             }
-            System.out.println('\n');
+            
+            
+           // System.out.println('\n');
 
         } else {
-            System.out.println("no Path found");
+            System.out.println("IA: no Path found");
         }
         
+        Node lastNode = endNode.get(endNode.size() -1);
         
-        int xMoveOffset = 1;
-        int yMoveOffset = 1;
+        int count = 0;
+        for(Node neighbour : map[xPosition][yPosition].neighbours) {
+        	
+        	if(neighbour == lastNode) {
+        		break;
+        	} else {
+        		count++;
+        	}
+        	
+        }
+       
+        int xMoveOffset = map[xPosition][yPosition].neighbourXOffsets.get(count);
+        int yMoveOffset = map[xPosition][yPosition].neighbourYOffsets.get(count);
         
         
-        return un.unifies(new NumberTermImpl(xMoveOffset), args[7]) & un.unifies(new NumberTermImpl(yMoveOffset), args[8]);
+        return un.unifies(new NumberTermImpl(xMoveOffset), args[8]) & un.unifies(new NumberTermImpl(yMoveOffset), args[9]);
     }
 
     private static List<Node> reconstruct_path(List<Node> cameFrom, Node current) {
@@ -190,8 +210,16 @@ public class astarsearch extends DefaultInternalAction {
 
             for (Node neighbour : current.neighbours) {
                 //double tentative_gScore = current.g + 1 ;
-
-                if (neighbour.obstacle == true || closedSet.contains(neighbour)) {
+            	
+            	if (neighbour.obstacle == true ) {
+            		//System.out.println("not considering Neighbour because it is an obstacle");
+            	}
+            	
+            	if (neighbour.scanned == false ) {
+            		//System.out.println("not considering Neighbour because it is not scanned");
+            	}
+            	
+                if (neighbour.obstacle == true || neighbour.scanned == false ||  closedSet.contains(neighbour)) {
                     continue;
                 }
 

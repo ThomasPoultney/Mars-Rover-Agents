@@ -43,7 +43,7 @@ MAS ia_submission {
 			"discovery_type=none")
 	
 	agents:
-		
+			
 		/*
 			NOTE ON DEFINING AGENTS
 			
@@ -68,7 +68,7 @@ MAS ia_submission {
 	
 		//scanningAgent[capacity=0, scan_range=6, group=1, mindinspector="gui(cycle,html,history)"];
 		//aStarTestAgent[capacity=0, scan_range=5, group=1, mindinspector="gui(cycle,html,history)"];
-	   scanner[capacity=0, scan_range=5, group=1, mindinspector="gui(cycle,html,history)"];
+	    scanner[capacity=0, scan_range=6, group=1];
 		
 		
 		
