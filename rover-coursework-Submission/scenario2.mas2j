@@ -59,10 +59,8 @@ MAS ia_submission {
 				
 		*/
 	
-			//jeff scanner[capacity=0, scan_range=4, group=1, mindinspector="gui(cycle,html,history)"];
-			steve scanner[capacity=0, scan_range=6, group=1];	
-			//jeff scanner[capacity=0, scan_range=6, group=1];		
-			bigJohn collector[capacity=5, scan_range=0, group=1];
+			  john scanner[capacity=0, scan_range=6, group=1];
+			  jeff collector[capacity=0, scan_range=6, group=1];
 			
 		
 		

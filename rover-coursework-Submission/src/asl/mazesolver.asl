@@ -2,7 +2,7 @@
 // Agent scanner in project ia_submission
 
 /* Initial beliefs and rules */
-type(scanner).
+type(collector).
 xPosition(0).
 yPosition(0).
 distanceTravelledX(0).
@@ -10,6 +10,8 @@ distanceTravelledY(0).
 finishedScanning(false).
 maxCapacityOfCollectionRovers(6).
 currentID(1).
+numOfResourcesOnBoard(0).
+dedicatedResourceType(null).
 
 
 
@@ -23,6 +25,8 @@ currentID(1).
 
 
 +!start : true <- .print("Agent Starting Up");					      	  				 
+				 .random(R);
+				  .wait(R * 30000);
 				  !check_configuaration;
 				  !print_agent_types;
 				  !rover_scan;
@@ -39,7 +43,7 @@ currentID(1).
 					      		.print(AgentName);						      						      	
 					      	 	.send(AgentName, tell, agentData([MyName,MyType,null]));
 					 		 }	
-					 		 .wait(5000);
+					 		 .wait(2000);
 					 		 !start					 		 
 					 		 .
 					 		 				 		 	  							   		
@@ -65,21 +69,108 @@ currentID(1).
 
 
 +!get_next_action : true <- .print("Calculating Next Action");																	
-									if(finishedScanning(false)) {
-										!get_next_scan_spot;
-									}else {
-										.print("We have scanned all tiles :)");
-										.findall([XPos,YPos], scanned(XPos,YPos), ListOfScanned);
-										 ?mapWidth(MapWidth);
-	   									 ?mapHeight(MapHeight);	 															  											
-										 ia_submission.debug_print_all_scanned(ListOfScanned, MapWidth, MapHeight);
-										.wait(40000);										
+									.count(miningEvent(_,_,_,_,_), N)
+									.print("There are currently ", N , " Mining Events");
+									
+									if(N > 0) {
+									 	.findall([ID, ResourceType, Quantity, XPos,YPos], miningEvent(ID,ResourceType,Quantity, XPos,YPos), ListOfMining);
+										.length(ListOfMining,P);
+										.print(P);
+										.print(ListOfMining);										
+										.nth(0, ListOfMining, InnerList);
+					      			    .nth(0, InnerList, ID);
+					      				.nth(1, InnerList, ResourceType);
+					      				.nth(2, InnerList, Quantity);
+					      				.nth(3, InnerList, XPos);
+					      				.nth(4, InnerList, YPos);					      				
+					      				if(dedicatedResourceType(ResourceType) | dedicatedResourceType(null)) {
+					      					!mine_resource(ID, ResourceType, Quantity, XPos, YPos);	
+					      					.abolish(miningEvent(ID, ResourceType, Quantity, XPos, YPos))				      					
+					      				} else {
+					      					-miningEvent(ID, ResourceType, Quantity, XPos, YPos);
+					      				}
+									} else {
+										if(finishedScanning(false)) {
+											!get_next_scan_spot;
+										}
+									
 									}
 									!get_next_action
-									.																																	
+									.																												
 									
 									
-			  
+@mine_resource[atomic]
++!mine_resource(ID, ResourceType, Quantity, XPos, YPos):  true
+	<-  
+		.print("Executing Mining Event"); 
+		 ?xPosition(X);
+		 ?yPosition(Y);
+		 !move_to_resource(X,Y,XPos,YPos);
+		 !collect_resource(ID, ResourceType, Quantity, XPos, YPos).
+	
+		 	
+		
+		       	
+       	  
+      	 									
+-!mine_resource(ID, ResourceType, Quantity, XPos, YPos) : true <- .print("Failed to mine resource").
+
+-!collect_resource(ID, ResourceType, Quantity, XPos, YPos): true <- .print("failed to collect").
+									
+
+-!deposit_resource(_,_): true <- .print("failed to deposit").	
+
+-!move_to_resource(X,Y, XPos, YPos): true <- .print("failed to move to resource from ", x , " " , y, " to " , XPos, " ", YPos).
+
+
+@collect_resource[atomic]		 
++!collect_resource(ID, ResourceType, Quantity, XPos, YPos) :true <- ?capacity(Cap);	     		  
+	     		  while(numOfResourcesOnBoard(R) & R <  Quantity) {    
+        	      		 collect(ResourceType);
+        	      		 -+dedicatedResourceType(ResourceType);
+        	      		.findall([Ag,Type], scannerAgent(Ag,Type), ListOfScannerAgents);
+        	      		 .length(ListOfScannerAgents, NumAgents);
+	     	 			 for (.range(I,0,NumAgents-1)) {
+	     	 			 	.nth(I, ListOfScannerAgents, Agent);
+	     	 				.print(Agent);
+	     	 				.nth(0, Agent, AgName);	
+	     	 			 	.send(AgName,tell,dedicatedResource(ResourceType))	;					  						     	 			 	
+	     	 			 }
+       					-+numOfResourcesOnBoard(R+1);
+        				 ?numOfResourcesOnBoard(Resources);        	
+       					.print("numOfResourcesOnBoard is", Resources);       					     
+        		  }
+        		   .print("Removing Mining Event from belief base");        		 
+        		  .
+
+@deposit_resource[atomic]		 
++!deposit_resource(ResourceType, Quantity) : true <- 			 														
+													 while(numOfResourcesOnBoard(R) & R >  0) { // where vl(X) is a belief     
+											      		deposit(ResourceType);
+											        	-+numOfResourcesOnBoard(R-1);
+											       		 ?numOfResourcesOnBoard(Resources);
+											        	.print("numOfResourcesOnBoard is", Resources);      
+											     	 } 
+											        .
+											     	 
+      											     	
+      											     
+@move_to_resource[atomic]
++!move_to_resource(CurrentX, CurrentY, TargetXPos, TargetYPos) : not((CurrentX == TargetXPos) & (CurrentY == TargetYPos)) <- 
+																			  .print("Moving to Next Resource Location");
+																		      ?mapWidth(MapWidth);
+	   																		  ?mapHeight(MapHeight);	   																		  
+																			  while((xPosition(X) & X \== TargetXPos) | (yPosition(Y) & Y \== TargetYPos)) {																			  															  	  
+																			  	?xPosition(X);
+																			  	?yPosition(Y);	
+																			  	.findall([ResourceKind,XPos,YPos], obstacleAt(ResourceKind,XPos,YPos), ListOfDiscoveredResources);	
+																			  	//.print(ListOfDiscoveredResources);    			
+																			  	.findall([XPos,YPos], scanned(XPos,YPos), ListOfScanned);															  	
+																			  	ia_submission.astarsearch(X, Y, TargetXPos, TargetYPos, MapWidth, MapHeight, ListOfDiscoveredResources, ListOfScanned, XMoveOffSet, YMoveOffSet);
+																			  	!move_rover(XMoveOffSet, YMoveOffSet); 
+																			  }.																		  
+
+			 			  
 
 @check_configuration[atomic]
 +!check_configuaration :true <- .print("Checking and storing configuaration of agent and world");
@@ -194,7 +285,7 @@ currentID(1).
  // go to resource found
  @resource_found[atomic,priority(100000)]
  +resource_found(ResourceType, Quantity, XDist, YDist):  true
-	<-   //.print("Found Resource")
+	<-   .print("Found Resource")
 		 ?xPosition(X);
 		 ?yPosition(Y);
 		 ?mapWidth(MapWidth);
@@ -208,29 +299,7 @@ currentID(1).
 	     	 +obstacleAt(ResourceType,XResult,YResult)
 	     } else {
 	     	 +resourceAt(ResourceType,Quantity,XResult,YResult);
-	     	 ?maxCapacityOfCollectionRovers(MaxCap);	     	 
-	     	 .findall([Ag,Type,DedicatedResource, NumAssignedTrips], collectorAgent(Ag,Type,DedicatedResource, NumAssignedTrips), ListOfCollectorAgent);
-	     	  .print("THE LIST OF COLLECTORS ARE: " , ListOfCollectorAgent);	
-	     	 .length(ListOfCollectorAgent, NumAgents);
-	     	 for (.range(I,0,NumAgents-1)) {
-	     	 	.nth(I, ListOfCollectorAgent, Agent);
-	     	 	.print(Agent);
-	     	 	.nth(0, Agent, AgName);	     	 	
-	     	 	.nth(2, Agent, AgResourceType);
-	     	 	.nth(3, Agent, NumAssignedTrips);
-	     	 	if(ResourceType == AgResourceType | AgResourceType == null) {
-	     	 		 
-	     	 		 +viableAgentsForTrip(AgName);
-	     	 	}
-	     	 }
-	     	 
-	     	.findall([AgName], viableAgentsForTrip(AgName), ListOFViableAgents);
-	     	.shuffle(ListOFViableAgents, ShuffledListOFViableAgents);
-			.print("The List of viable agents are: ",ListOFViableAgents);
-	     	 .nth(0, ShuffledListOFViableAgents, NameOfAgentMakingTheTrip); 
-	     	 .print(NameOfAgentMakingTheTrip);
-	     	 
-	     	 
+	     	 ?maxCapacityOfCollectionRovers(MaxCap);	     	  	 	     	 
 	     	 if(Quantity > MaxCap) {
 	     	 	//.print("Collecting the Resource Takes Multiple Trips");
 	     	 	ia_submission.calcNumTrips(MaxCap, Quantity, ListOfTrips);	     	 		     	 		     	 	
@@ -239,22 +308,16 @@ currentID(1).
 				for (.range(I,0,Length-1)) {
 					 ?currentID(CurrID);								      	
 					.nth(0, ListOfTrips, QuanForTrip);
-					 +miningEvent(CurrID,ResourceType, QuanForTrip, XResult, YResult);
-					 .send(NameOfAgentMakingTheTrip,tell,miningEvent(CurrID, ResourceType,QuanForTrip,XResult,YResult))	;					  					
-					  -+currentID(CurrID + I);
+					 +miningEvent(CurrID,ResourceType, QuanForTrip, XResult, YResult);					 				  					
+					 -+currentID(CurrID + I);
 				 }   	     	 	
 	     	 } else {
 	     	 	 ?currentID(CurrID);	
-	     	 	 +miningEvent(CurrID, ResourceType, Quantity, XResult, YResult);
-	     	 	 .send(NameOfAgentMakingTheTrip,tell,miningEvent(CurrID, ResourceType,Quantity,XResult,YResult))	;					  					
-	     	 	 
+	     	 	 +miningEvent(CurrID, ResourceType, Quantity, XResult, YResult); 	 
 	     	 }    		     	 
-	     	    
-
-	     	
 	    	 .broadcast(tell,resourceAt(ResourceType,Quantity,XResult,YResult))	
 	     }
-	     .  
+.  
 	     	
 
  +resource_not_found: true

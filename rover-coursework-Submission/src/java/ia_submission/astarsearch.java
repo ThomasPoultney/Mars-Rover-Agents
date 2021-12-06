@@ -78,7 +78,7 @@ public class astarsearch extends DefaultInternalAction {
 			// map[scannedXPosition][scannedYPosition].yPosition);
 		}
 
-        System.out.println("IA: Implementing A* Search from position X: " + xPosition + " Y: " + yPosition + " Target is X: " + targetXPosition + " Y: " + targetYPosition);
+        //System.out.println("IA: Implementing A* Search from position X: " + xPosition + " Y: " + yPosition + " Target is X: " + targetXPosition + " Y: " + targetYPosition);
 
         for (int x = 0; x < mapWidth; x++) {
             for (int y = 0; y < mapHeight; y++) {

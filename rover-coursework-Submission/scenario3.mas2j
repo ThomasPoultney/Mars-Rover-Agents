@@ -59,9 +59,10 @@ MAS ia_submission {
 				
 		*/
 	
-					steve scanner[capacity=0, scan_range=6, group=1];	
-				   			
-					bigJohn collector[capacity=6, scan_range=0, group=1];
+					steve scanner[capacity=0, scan_range=6, group=8];	
+					steveTwo scanner[capacity=0, scan_range=6, group=8];			   
+				   	jeff collector[capacity=6, scan_range=0, group=4];
+				    sally collector[capacity=6, scan_range=0, group=4];
 		
 		
 	aslSourcePath:

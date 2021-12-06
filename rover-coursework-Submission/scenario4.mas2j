@@ -57,13 +57,10 @@ MAS ia_submission {
 	
 		
 		/**** ADD YOUR AGENT(S) HERE *****/
-		//john scanningAgent[capacity=0, scan_range=6, group=1, mindinspector="gui(cycle,html,history)"];
-		steve scanner[capacity=0, scan_range=6, group=1];
-	    steveo scanner[capacity=0, scan_range=6, group=1];
-	     
-		//bigSally collector[capacity=6, scan_range=6, group=1];					
-		//bigJohn collector[capacity=6, scan_range=6, group=1];
-		
+			steve scanner[capacity=0, scan_range=6, group=8];	
+			steveTwo scanner[capacity=0, scan_range=6, group=8];			   
+			jeff collector[capacity=6, scan_range=1, group=4];
+			sally collector[capacity=6, scan_range=1, group=4];
 	aslSourcePath:
 		"src/asl";
 }

@@ -57,11 +57,11 @@ MAS ia_submission {
 	
 		
 		/**** ADD YOUR AGENT(S) HERE *****/
-		steve scanner[capacity=0, scan_range=1, group=1];
-		john scanner[capacity=0, scan_range=1, group=2];		
-		jeff scanner[capacity=0, scan_range=1, group=3];
-		sally scanner[capacity=0, scan_range=1, group=4];
-		
+		steve mazesolver[capacity=5, scan_range=1, group=1];
+		john mazesolver[capacity=5, scan_range=1, group=2];		
+		jeff mazesolver[capacity=5, scan_range=1, group=3];
+		sally mazesolver[capacity=5, scan_range=1, group=4];
+		timmy mazesolver[capacity=5, scan_range=1, group=4];
 		
 		
 	aslSourcePath:
