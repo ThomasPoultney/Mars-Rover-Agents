@@ -161,7 +161,8 @@ public class getNextScanLocation extends DefaultInternalAction {
 			yScanLocation = nearestNodeToRover.get(randInt).yPosition;
 
 		} else {
-			return false;
+			xScanLocation = 0;
+			yScanLocation = 0;
 		}
 
 		return un.unifies(new NumberTermImpl(xScanLocation), args[7])

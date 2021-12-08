@@ -43,6 +43,7 @@ MAS ia_submission {
 			"discovery_type=none")
 	
 	agents:
+		hybrid;
 		mazesolver;
 		test_communication;
 		hybridAgent;

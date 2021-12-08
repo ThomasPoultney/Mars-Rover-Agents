@@ -38,16 +38,16 @@ public class Node implements java.lang.Comparable<Node> {
         		
 	
 	 public double calculateHeuristic(Node target){
-		 	    		
-		float dx = Math.abs(target.xPosition - this.xPosition);
-		float dy = Math.abs(target.yPosition - this.yPosition);
-                //System.out.println("When the position is: " + this.xPosition + " " + this.yPosition + " The ED is " + Math.sqrt((dx*dx)+ (dy * dy)));
-	        if(dx > dy) {
-                    return (14*dy + 10*( dx - dy));
-                } else {
-                    return (14*dx + 10*( dy - dx));
+  		
+			float dx = Math.abs(target.xPosition - this.xPosition);
+			float dy = Math.abs(target.yPosition - this.yPosition);
+	                //System.out.println("When the position is: " + this.xPosition + " " + this.yPosition + " The ED is " + Math.sqrt((dx*dx)+ (dy * dy)));
+		        if(dx > dy) {
+	                    return (14*dy + 10*( dx - dy));
+	                } else {
+	                    return (14*dx + 10*( dy - dx));
 
-                }
-             
-     }
+	                }
+	             
+	     }
 }

@@ -57,10 +57,10 @@ MAS ia_submission {
 	
 		
 		/**** ADD YOUR AGENT(S) HERE *****/
-			steve scanner[capacity=0, scan_range=6, group=8];	
-			steveTwo scanner[capacity=0, scan_range=6, group=8];			   
-			jeff collector[capacity=6, scan_range=1, group=4];
-			sally collector[capacity=6, scan_range=1, group=4];
+			scannerSteve scanner[capacity=0, scan_range=6, group=8];	
+			scannerJeff scanner[capacity=0, scan_range=6, group=8];			   
+			collectorDedicatedDiamond collector[capacity=6, scan_range=0, resource_type="Diamond", group=4];
+			collectorDedicatedGold collector[capacity=6, scan_range=0, resource_type="Gold", group=4];
 	aslSourcePath:
 		"src/asl";
 }

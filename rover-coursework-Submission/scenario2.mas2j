@@ -59,9 +59,10 @@ MAS ia_submission {
 				
 		*/
 	
-			  john scanner[capacity=0, scan_range=6, group=1];
-			  jeff collector[capacity=0, scan_range=6, group=1];
-			
+			  scannerJeff scanner[capacity=0, scan_range=6, group=1];
+			  collectorSally collector[capacity=6, scan_range=0,resource_type="Gold", group=1];
+			 // john hybrid [capacity=2, scan_range=4, group=9, resource_type = "Gold"]; 
+			  //jeff hybrid [capacity=2, scan_range=4, group=9, resource_type = "Gold"];  
 		
 		
 		

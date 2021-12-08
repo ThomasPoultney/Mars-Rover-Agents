@@ -37,13 +37,8 @@ public class calcNumTrips extends DefaultInternalAction {
     	ListTerm tripOutput = new ListTermImpl();
     	
     	for(Integer trip : trips) {
-    		
-    		
-    		
-    		NumberTerm tripTerm =  new NumberTermImpl(trip);	    		
-    		
+    		NumberTerm tripTerm =  new NumberTermImpl(trip);	    		    		
     		tripOutput.add(tripTerm);
-
     	}
     	
     	//everything ok, so returns true
