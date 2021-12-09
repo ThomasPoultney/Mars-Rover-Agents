@@ -164,6 +164,9 @@ public class getNextScanLocation extends DefaultInternalAction {
 			xScanLocation = 0;
 			yScanLocation = 0;
 		}
+		
+		
+	
 
 		return un.unifies(new NumberTermImpl(xScanLocation), args[7])
 				& un.unifies(new NumberTermImpl(yScanLocation), args[8]);

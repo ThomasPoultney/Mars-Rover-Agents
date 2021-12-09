@@ -8,10 +8,13 @@ yPosition(0).
 distanceTravelledX(0).
 distanceTravelledY(0).
 finishedScanning(false).
-maxCapacityOfCollectionRovers(6).
+maxCapacityOfCollectionRovers(5).
 currentID(1).
 numOfResourcesOnBoard(0).
 dedicatedResourceType(null).
+baseXPosition(20).
+baseYPosition(29).
+randomMovementValues([-1,0,1]).
 
 
 
@@ -25,11 +28,22 @@ dedicatedResourceType(null).
 
 
 +!start : true <- .print("Agent Starting Up");					      	  				 
+				 !check_configuaration;
+				 
 				 .random(R);
-				  .wait(R * 30000);
-				  !check_configuaration;
+				  .all_names(AgentNames);
+				  .length(AgentNames, Length); 
+				  .my_name(MyName); 					  
+				   for (.range(I,0,Length-1)) {
+					    .nth(I, AgentNames, AgentName);
+					   if(AgentName = MyName) {
+					   	   .wait((I * 1.5) * 15000);
+					   	   if(I == 0) {
+					   	   	!rover_scan;					   	   	
+					   	   }
+					   }					      						      	
+				  }					
 				  !print_agent_types;
-				  !rover_scan;
 				  !get_next_action.
 				
 
@@ -40,7 +54,7 @@ dedicatedResourceType(null).
 					 		 ?type(MyType);						 		 			  
 					 		 for (.range(I,0,Length-1)) {
 					      		.nth(I, AgentNames, AgentName);
-					      		.print(AgentName);						      						      	
+					      		//.print(AgentName);						      						      	
 					      	 	.send(AgentName, tell, agentData([MyName,MyType,null]));
 					 		 }	
 					 		 .wait(2000);
@@ -50,53 +64,101 @@ dedicatedResourceType(null).
 					   					 
 
 
-+agentData([Name,Type,DedicatedResource])[source(Ag)]: true <- .print("message received from ", Ag, " Whos type is  ", Type, " and Resource is ", DedicatedResource);
++agentData([Name,Type,DedicatedResource])[source(Ag)]: true <- //.print("message received from ", Ag, " Whos type is  ", Type, " and Resource is ", DedicatedResource);
 																if(Type == scanner) {																	
 																	+scannerAgent(Ag,Type);
 																} else {																	
 																	+collectorAgent(Ag,Type,DedicatedResource,0);
 																}
 																.
-+dedicatedResource(T)[source(Ag)]: true <- 	.print("message received from ", Ag, " Who's dedicated Resource is ", T);
++dedicatedResource(T)[source(Ag)]: true <- 	//.print("message received from ", Ag, " Who's dedicated Resource is ", T);
 											-+collectorAgent(Ag,T). 					 
 								
 
 				  			 
 @print_agent_types[atomic]				
-+!print_agent_types : true <- .findall(Ag, type(X,Ag), LAgs);
-							  .print(Ag, " type is ", X).					  
++!print_agent_types : true <- .findall(Ag, type(X,Ag), LAgs).
+							  //.print(Ag, " type is ", X).					  
 				  
 
 
-+!get_next_action : true <- .print("Calculating Next Action");																	
++!get_next_action : true <- //.print("Calculating Next Action");																	
 									.count(miningEvent(_,_,_,_,_), N)
-									.print("There are currently ", N , " Mining Events");
+									//.print("There are currently ", N , " Mining Events");
 									
-									if(N > 0) {
-									 	.findall([ID, ResourceType, Quantity, XPos,YPos], miningEvent(ID,ResourceType,Quantity, XPos,YPos), ListOfMining);
-										.length(ListOfMining,P);
-										.print(P);
-										.print(ListOfMining);										
-										.nth(0, ListOfMining, InnerList);
-					      			    .nth(0, InnerList, ID);
-					      				.nth(1, InnerList, ResourceType);
-					      				.nth(2, InnerList, Quantity);
-					      				.nth(3, InnerList, XPos);
-					      				.nth(4, InnerList, YPos);					      				
-					      				if(dedicatedResourceType(ResourceType) | dedicatedResourceType(null)) {
-					      					!mine_resource(ID, ResourceType, Quantity, XPos, YPos);	
-					      					.abolish(miningEvent(ID, ResourceType, Quantity, XPos, YPos))				      					
-					      				} else {
-					      					-miningEvent(ID, ResourceType, Quantity, XPos, YPos);
-					      				}
+									?xPosition(XLoc);
+									?yPosition(YLoc);
+									?baseXPosition(BaseXLoc);
+									?baseYPosition(BaseYLoc);
+									?numOfResourcesOnBoard(R);
+									?mapWidth(MapWidth);
+	   								?mapHeight(MapHeight);	
+									.findall([XPos,YPos], scanned(XPos,YPos), ListOfScannedTiles);	
+									.findall([ResourceKind,XPos,YPos], obstacleAt(ResourceKind,XPos,YPos), ListOfDiscoveredObstacles);	    													
+									//.print(XMoveOffSet,YMoveOffSet);									
+									 ia_submission.returnModulus(XLoc + 1, MapWidth, TileToRight);
+									 ia_submission.returnModulus(XLoc - 1, MapWidth, TileToLeft);
+						    		 ia_submission.returnModulus(YLoc + 1,  MapHeight, TileAbove);	
+									 ia_submission.returnModulus(YLoc - 1,  MapHeight, TileBelow);																			
+									if(not(.member([TileToRight, YLoc],ListOfScannedTiles)) | not(.member([TileToLeft, YLoc],ListOfScannedTiles)) | not(.member([XLoc, TileAbove],ListOfScannedTiles)) | not(.member([XLoc, TileBelow],ListOfScannedTiles))) {
+										.print("Neighbour is unscanned, Scanning");
+										!rover_scan;
+									}
+									
+								
+									
+									if(XLoc == BaseXLoc & YLoc == BaseYLoc & R > 0) {
+										.print("At Base");
+										?dedicatedResourceType(Type)
+										
+										!deposit_resource(Type, R);
 									} else {
-										if(finishedScanning(false)) {
-											!get_next_scan_spot;
+										 ?scanRange(ScanRange);
+										 ia_submission.astarsearchwithbool(XLoc, YLoc, BaseXLoc, BaseYLoc, MapWidth, MapHeight, ListOfDiscoveredObstacles,ListOfScannedTiles, XMoveOffSet, YMoveOffSet);							
+										 ia_submission.getNextScanLocation(XLoc, YLoc, MapWidth, MapHeight, ListOfDiscoveredObstacles, ListOfScannedTiles, ScanRange, ScanLocationX, ScanLocationY);						    						    
+						   				
+										if(not(XMoveOffSet == 0 & YMoveOffSet == 0) & (ScanLocationX == 0 & ScanLocationY == 0)) {
+											.print("Base Location is known and all tiles are scanned, returning to base now");
+										
+											!return_to_base;
 										}
 									
+										if(N > 0) {
+										 	.findall([ID, ResourceType, Quantity, XPos,YPos], miningEvent(ID,ResourceType,Quantity, XPos,YPos), ListOfMining);
+											.length(ListOfMining,P);
+											//.print(P);
+											//.print(ListOfMining);	
+											for (.range(I,0,P - 1)) {									
+												.nth(I, ListOfMining, InnerList);
+							      			    .nth(0, InnerList, ID);
+							      				.nth(1, InnerList, ResourceType);
+							      				.nth(2, InnerList, Quantity);
+							      				.nth(3, InnerList, XPosOfResource);
+							      				.nth(4, InnerList, YPosOfResource);		
+							      				?maxCapacityOfCollectionRovers(MaxCap);
+							      						      				
+							      				if((dedicatedResourceType(ResourceType) | dedicatedResourceType(null)) & (XLoc == XPosOfResource & YLoc == YPosOfResource) & (R + Quantity) <= MaxCap) {
+							      					!collect_resource(ID, ResourceType, Quantity, XPos, YPos);
+							      					.abolish(miningEvent(ID, ResourceType, Quantity, XPos, YPos))				      					
+							      				} 
+						      				}
+						      				
+										} 											
+											
+																						
+											!get_next_scan_spot;
+																			
 									}
 									!get_next_action
-									.																												
+									.				
+									
+@return_to_base[atomic]	        
++!return_to_base: true <- //.print("Returning to base");
+						 ?xPosition(CurrentX);
+						 ?yPosition(CurrentY);	 	
+						 ?baseXPosition(BaseX);
+						 ?baseYPosition(BaseY);
+						 !move_to_resource(CurrentX,CurrentY,BaseX,BaseY).																																
 									
 									
 @mine_resource[atomic]
@@ -114,6 +176,7 @@ dedicatedResourceType(null).
        	  
       	 									
 -!mine_resource(ID, ResourceType, Quantity, XPos, YPos) : true <- .print("Failed to mine resource").
+																
 
 -!collect_resource(ID, ResourceType, Quantity, XPos, YPos): true <- .print("failed to collect").
 									
@@ -132,15 +195,15 @@ dedicatedResourceType(null).
         	      		 .length(ListOfScannerAgents, NumAgents);
 	     	 			 for (.range(I,0,NumAgents-1)) {
 	     	 			 	.nth(I, ListOfScannerAgents, Agent);
-	     	 				.print(Agent);
+	     	 				//.print(Agent);
 	     	 				.nth(0, Agent, AgName);	
 	     	 			 	.send(AgName,tell,dedicatedResource(ResourceType))	;					  						     	 			 	
 	     	 			 }
        					-+numOfResourcesOnBoard(R+1);
         				 ?numOfResourcesOnBoard(Resources);        	
-       					.print("numOfResourcesOnBoard is", Resources);       					     
+       					//.print("numOfResourcesOnBoard is", Resources);       					     
         		  }
-        		   .print("Removing Mining Event from belief base");        		 
+        		  // .print("Removing Mining Event from belief base");        		 
         		  .
 
 @deposit_resource[atomic]		 
@@ -149,7 +212,7 @@ dedicatedResourceType(null).
 											      		deposit(ResourceType);
 											        	-+numOfResourcesOnBoard(R-1);
 											       		 ?numOfResourcesOnBoard(Resources);
-											        	.print("numOfResourcesOnBoard is", Resources);      
+											        	//.print("numOfResourcesOnBoard is", Resources);      
 											     	 } 
 											        .
 											     	 
@@ -157,23 +220,30 @@ dedicatedResourceType(null).
       											     
 @move_to_resource[atomic]
 +!move_to_resource(CurrentX, CurrentY, TargetXPos, TargetYPos) : not((CurrentX == TargetXPos) & (CurrentY == TargetYPos)) <- 
-																			  .print("Moving to Next Resource Location");
+																			  //.print("Moving to Next Resource Location");
 																		      ?mapWidth(MapWidth);
 	   																		  ?mapHeight(MapHeight);	   																		  
-																			  while((xPosition(X) & X \== TargetXPos) | (yPosition(Y) & Y \== TargetYPos)) {																			  															  	  
 																			  	?xPosition(X);
 																			  	?yPosition(Y);	
 																			  	.findall([ResourceKind,XPos,YPos], obstacleAt(ResourceKind,XPos,YPos), ListOfDiscoveredResources);	
 																			  	//.print(ListOfDiscoveredResources);    			
 																			  	.findall([XPos,YPos], scanned(XPos,YPos), ListOfScanned);															  	
-																			  	ia_submission.astarsearch(X, Y, TargetXPos, TargetYPos, MapWidth, MapHeight, ListOfDiscoveredResources, ListOfScanned, XMoveOffSet, YMoveOffSet);
-																			  	!move_rover(XMoveOffSet, YMoveOffSet); 
-																			  }.																		  
+																			  	ia_submission.astarsearchwithbool(X, Y, TargetXPos, TargetYPos, MapWidth, MapHeight, ListOfDiscoveredResources, ListOfScanned, XMoveOffSet, YMoveOffSet);
+																			  	if(not(XMoveOffSet == 0 &  YMoveOffSet == 0)) {
+																			  		!move_rover(XMoveOffSet, YMoveOffSet); 
+																	  		
+																			  	}
+																			    .																		  
+-!move_rover(XDist,YDist) : true <- .print("failed to move");
+									.wait(2000).											 
+											
+																												  
 
+									
 			 			  
 
 @check_configuration[atomic]
-+!check_configuaration :true <- .print("Checking and storing configuaration of agent and world");
++!check_configuaration :true <- //.print("Checking and storing configuaration of agent and world");
 			     rover.ia.check_config(Capacity,Scanrange,Resourcetype);
 			     rover.ia.get_map_size(Width,Height);
 			     -+capacity(Capacity);
@@ -189,12 +259,12 @@ dedicatedResourceType(null).
 	   					  ?scanRange(CurrentScanRange);
 	   					  ?resourceType(CurrentResourceType);
 	   					  ?mapWidth(Width);
-	   					  ?mapHeight(Height);
-						  .print("Robot configuration is: capacity: ",CurrentCapacity, " Scan Range: ",CurrentScanRange, " Resource to collect: ", CurrentResourceType);
-						  .print("Map Width is: ", Width, " Map Height is: ", Height).	
+	   					  ?mapHeight(Height).
+						  //.print("Robot configuration is: capacity: ",CurrentCapacity, " Scan Range: ",CurrentScanRange, " Resource to collect: ", CurrentResourceType);
+						  //.print("Map Width is: ", Width, " Map Height is: ", Height).	
 
 @get_next_scan_spot[atomic]					  
-+!get_next_scan_spot : true <- .print("Getting Next Scan Location");
++!get_next_scan_spot : true <- //.print("Getting Next Scan Location");
 							?xPosition(XPosition);
 							?yPosition(YPosition);
 							?mapWidth(Width);
@@ -205,42 +275,45 @@ dedicatedResourceType(null).
 	   					  	//.print(ListOfDiscoveredObstacles);
 	   					  	?scanRange(ScanRange);
 						    ia_submission.getNextScanLocation(XPosition, YPosition, Width, Height, ListOfDiscoveredObstacles, ListOfScannedTiles, ScanRange, ScanLocationX, ScanLocationY);						    						    
-						    !move_to_next_scan_spot(XPosition, YPosition, ScanLocationX, ScanLocationY).
+						    if(not(ScanLocationX == 0 & ScanLocationY == 0)) {
+						    	!move_to_next_scan_spot(XPosition, YPosition, ScanLocationX, ScanLocationY);						    							    							    	
+						    }.
 
 				    
 -!get_next_scan_spot : true <- .print("Error finding a scan Location, Trying again");
-							   .wait(40000).
+							   .
 							   
 
 							 						   
 
 @move_to_next_scan_spot[atomic]
 +!move_to_next_scan_spot(CurrentX, CurrentY, TargetXPos, TargetYPos) : not((CurrentX == TargetXPos) & (CurrentY == TargetYPos)) <- 
-																			  .print("Moving to Next Scan Location X:", TargetXPos, " Y: ", TargetYPos);
+																			  //.print("Moving to Next Scan Location X:", TargetXPos, " Y: ", TargetYPos);
 																		      ?mapWidth(MapWidth);
 	   																		  ?mapHeight(MapHeight);	   																		  
-																			  while((xPosition(X) & X \== TargetXPos) | (yPosition(Y) & Y \== TargetYPos)) {																			  															  	  
-																			  	?xPosition(X);
-																			  	?yPosition(Y);	
-																			  	.findall([ResourceKind,XPos,YPos], obstacleAt(ResourceKind,XPos,YPos), ListOfDiscoveredResources);	
-																			  	//.print(ListOfDiscoveredResources);    			
-																			  	.findall([XPos,YPos], scanned(XPos,YPos), ListOfScanned);															  	
-																			  	ia_submission.astarsearch(X, Y, TargetXPos, TargetYPos, MapWidth, MapHeight, ListOfDiscoveredResources, ListOfScanned, XMoveOffSet, YMoveOffSet);
-																			  	!move_rover(XMoveOffSet, YMoveOffSet); 
-																			  }																			  
-																			  !rover_scan;
-																			  .																		
-																			  
+																			  ?xPosition(X);
+																			  ?yPosition(Y);	
+																			  .findall([ResourceKind,XPos,YPos], obstacleAt(ResourceKind,XPos,YPos), ListOfDiscoveredResources);	
+																			  //.print(ListOfDiscoveredResources);    			
+																			  .findall([XPos,YPos], scanned(XPos,YPos), ListOfScanned);															  	
+																			  ia_submission.astarsearchwithbool(X, Y, TargetXPos, TargetYPos, MapWidth, MapHeight, ListOfDiscoveredResources, ListOfScanned, XMoveOffSet, YMoveOffSet);
+																			  if(not(XMoveOffSet == 0 &  YMoveOffSet == 0)) {
+																			  		!move_rover(XMoveOffSet, YMoveOffSet); 																	  		
+																			   }
+																			   .
+																			    
+															  																			    																	  																			  
+																			    																				    																		
+-!move_to_next_scan_spot(X,Y, XPos, YPos): true <- .print("failed to move to resource from ", x , " " , y, " to " , XPos, " ", YPos);											 
+											 .																		  
 
 																								
 																								
 -!move_to_next_scan_spot(_,_,_,_) : true <- .print("unable to move to scan location").																								  
-																		 			   			 
-																		  
-				
+																		 			   			 		
 
 @rover_scan[atomic]
-+!rover_scan : true <-   .print("Rover Scanning and then updating scanned Locations");
++!rover_scan : true <-   //.print("Rover Scanning and then updating scanned Locations");
 						 ?scanRange(ScanRange);
 						 ?xPosition(X);
 						 ?yPosition(Y);
@@ -285,7 +358,7 @@ dedicatedResourceType(null).
  // go to resource found
  @resource_found[atomic,priority(100000)]
  +resource_found(ResourceType, Quantity, XDist, YDist):  true
-	<-   .print("Found Resource")
+	<-   //.print("Found Resource")
 		 ?xPosition(X);
 		 ?yPosition(Y);
 		 ?mapWidth(MapWidth);
@@ -308,12 +381,16 @@ dedicatedResourceType(null).
 				for (.range(I,0,Length-1)) {
 					 ?currentID(CurrID);								      	
 					.nth(0, ListOfTrips, QuanForTrip);
-					 +miningEvent(CurrID,ResourceType, QuanForTrip, XResult, YResult);					 				  					
+					 +miningEvent(CurrID,ResourceType, QuanForTrip, XResult, YResult);
+					 .broadcast(tell,miningEvent(CurrID,ResourceType, QuanForTrip, XResult, YResult));	
+					 					 				  					
 					 -+currentID(CurrID + I);
 				 }   	     	 	
 	     	 } else {
 	     	 	 ?currentID(CurrID);	
-	     	 	 +miningEvent(CurrID, ResourceType, Quantity, XResult, YResult); 	 
+	     	 	 +miningEvent(CurrID, ResourceType, Quantity, XResult, YResult); 
+	     	 	 .broadcast(tell,miningEvent(CurrID, ResourceType, Quantity, XResult, YResult))	;
+	     	 	 	 
 	     	 }    		     	 
 	    	 .broadcast(tell,resourceAt(ResourceType,Quantity,XResult,YResult))	
 	     }

@@ -54,7 +54,7 @@ public class calculateScannedTiles extends DefaultInternalAction {
 	private List<ScannedTile> calcScannedTiles(int xPosition, int yPosition, int scanRange, int mapWidth, int mapHeight) {
 		
 		boolean DEBUG = false;
-		System.out.println(scanRange);
+		//System.out.println(scanRange);
 		
 		int tilesUnderConsideration = 0;
 		boolean[][] willBeScanned = new boolean[scanRange*2 + 1][scanRange*2 + 1];

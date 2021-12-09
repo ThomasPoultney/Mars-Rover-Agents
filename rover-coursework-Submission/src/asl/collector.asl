@@ -14,7 +14,7 @@ numOfResourcesOnBoard(0).
 dedicatedResourceType(null).
 baseLocationX(0).
 baseLocationY(0).
-randomMovementValues([0,1,2]).
+randomMovementValues([-1,0,1]).
 
 /* Initial goals */
 
@@ -33,7 +33,7 @@ randomMovementValues([0,1,2]).
 +!establish_comms: true <-   .all_names(AgentNames);
 					 		 .length(AgentNames, Length); 
 					 		 .my_name(MyName); 					 		 
-					 		 .print(X);	
+					 		 //.print(X);	
 					 		 ?type(MyType);			
 					 		 ?resourceType(ResourceType);			 		 			  
 					 		 for (.range(I,0,Length-1)) {
@@ -55,9 +55,9 @@ randomMovementValues([0,1,2]).
 
 
 
-+!get_next_action : true <- .print("Calculating Next Action");																	
++!get_next_action : true <- //.print("Calculating Next Action");																	
 									.count(miningEvent(_,_,_,_,_), N)
-									.print("There are currently ", N , " Mining Events");
+									//.print("There are currently ", N , " Mining Events");
 									?numOfResourcesOnBoard(NumResourcesOnBoard);
 																		
 									if(NumResourcesOnBoard \== 0) {
@@ -84,8 +84,8 @@ randomMovementValues([0,1,2]).
 											if(N > 0) {
 									 		.findall([ID, ResourceType, Quantity, XPos,YPos], miningEvent(ID,ResourceType,Quantity, XPos,YPos), ListOfMining);
 											.length(ListOfMining,P);
-											.print(P);
-											.print(ListOfMining);										
+											//.print(P);
+											//.print(ListOfMining);										
 											.nth(0, ListOfMining, InnerList);
 						      			    .nth(0, InnerList, ID);
 						      				.nth(1, InnerList, ResourceType);
@@ -131,9 +131,15 @@ randomMovementValues([0,1,2]).
 											 .shuffle(L,ShuffledList);
 											 .nth(0,ShuffledList, RandXMovement);
 											 .shuffle(ShuffledList,ShuffledShuffledList);
-											 .nth(0,ShuffledShuffledList, RandYMovement);											 
-											 .print("Making random move: " , X ," , " , Y , " To try recover");
-											 !move_rover(RandXMovement, RandYMovement).
+											 .nth(0,ShuffledShuffledList, RandYMovement);	
+											 ?xPosition(CurrX);
+											 ?yPosition(CurrY);
+											 ?mapWidth(MapWidth);
+	   					  				     ?mapHeight(MapHeight);	
+											 ia_submission.returnModulus(CurrX + RandXMovement, MapWidth, XResult);
+						    				 ia_submission.returnModulus(CurrY + RandYMovement, MapHeight, YResult);									 
+											 .print("Making random move from current position(" , X ,"," , Y , ")  To random nearby position(",XResult,",", YResult,") to try recover");
+											 !move_to_resource(CurrX,CurrY, XResult, YResult).
 										    
 	
 @check_configuration[atomic]
@@ -154,8 +160,9 @@ randomMovementValues([0,1,2]).
 	   					  ?resourceType(CurrentResourceType);
 	   					  ?mapWidth(Width);
 	   					  ?mapHeight(Height);
-						  .print("Robot configuration is: capacity: ",CurrentCapacity, " Scan Range: ",CurrentScanRange, " Resource to collect: ", CurrentResourceType);
-						  .print("Map Width is: ", Width, " Map Height is: ", Height).	
+	   					  .
+						  //.print("Robot configuration is: capacity: ",CurrentCapacity, " Scan Range: ",CurrentScanRange, " Resource to collect: ", CurrentResourceType);
+						  //.print("Map Width is: ", Width, " Map Height is: ", Height).	
 						  
 @move_rover[atomic]	
 +!move_rover(XDist,YDist) : true <- 
@@ -192,14 +199,14 @@ randomMovementValues([0,1,2]).
         	      		 .length(ListOfScannerAgents, NumAgents);
 	     	 			 for (.range(I,0,NumAgents-1)) {
 	     	 			 	.nth(I, ListOfScannerAgents, Agent);
-	     	 				.print(Agent);
+	     	 				//.print(Agent);
 	     	 				.nth(0, Agent, AgName);	
 	     	 			 	.send(AgName,tell,dedicatedResource(ResourceType))	;					  					
 	     	 			 	
 	     	 			 }
        					-+numOfResourcesOnBoard(R+1);
         				 ?numOfResourcesOnBoard(Resources);        	
-       					.print("numOfResourcesOnBoard is", Resources);       					     
+       					//.print("numOfResourcesOnBoard is", Resources);       					     
         		   }
         		   !return_to_base;	       	 		   
         		  .
@@ -210,7 +217,7 @@ randomMovementValues([0,1,2]).
 											      		 deposit(ResourceType);
 											        	-+numOfResourcesOnBoard(R-1);
 											       		 ?numOfResourcesOnBoard(Resources);
-											        	.print("numOfResourcesOnBoard is", Resources);      
+											        	//.print("numOfResourcesOnBoard is", Resources);      
 											     	 } 											     				      																     	 
 											        .
 											     	 
@@ -218,7 +225,7 @@ randomMovementValues([0,1,2]).
       											     
 @move_to_resource[atomic]
 +!move_to_resource(CurrentX, CurrentY, TargetXPos, TargetYPos) : not((CurrentX == TargetXPos) & (CurrentY == TargetYPos)) <- 
-																			  .print("Moving to Next Resource Location");
+																			  //.print("Moving to Next Resource Location");
 																		      ?mapWidth(MapWidth);
 	   																		  ?mapHeight(MapHeight);
 	   																		   																		  
@@ -238,7 +245,7 @@ randomMovementValues([0,1,2]).
 +!move_to_resource(CurrentX, CurrentY, TargetXPos, TargetYPos) : (CurrentX == TargetXPos) & (CurrentY == TargetYPos) <- .print("Already at location").		
 								  	
 @return_to_base[atomic]	        
-+!return_to_base: true <- .print("Returning to base");
++!return_to_base: true <- //.print("Returning to base");
 						 ?xPosition(CurrentX);
 						 ?yPosition(CurrentY);	 	
 						 ?baseLocationX(BaseX);

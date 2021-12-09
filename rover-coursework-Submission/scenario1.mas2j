@@ -43,10 +43,7 @@ MAS ia_submission {
 			"discovery_type=none")
 	
 	agents:
-		hybrid;
-		mazesolver;
-		test_communication;
-		hybridAgent;
+		
 			
 		/*
 			NOTE ON DEFINING AGENTS
@@ -70,9 +67,12 @@ MAS ia_submission {
 				
 		*/
 	
-		//scanningAgent[capacity=0, scan_range=6, group=1, mindinspector="gui(cycle,html,history)"];
-		//aStarTestAgent[capacity=0, scan_range=5, group=1, mindinspector="gui(cycle,html,history)"];
-	  
+			
+		steve mazesolver[capacity=5, scan_range=1, group=4];
+		john mazesolver[capacity=5, scan_range=1, group=4];		
+		jeff mazesolver[capacity=5, scan_range=1, group=4];
+		sally mazesolver[capacity=5, scan_range=1, group=4];
+		timmy mazesolver[capacity=5, scan_range=1, group=4];
 		
 		
 		

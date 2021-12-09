@@ -5,8 +5,8 @@
     "can_scan_diamond": true,
     "can_scan_gold": true,
     "can_scan_obstacle": true,
-    "energy": "5000",
-    "max_agent_count": 1
+    "energy": "1800",
+    "max_agent_count": 5
   },
   "artefacts": {
     "dynamic":  {
@@ -31,7 +31,7 @@
   "world": {
     "configurable_points": 6,
     "fullscreen": false,
-    "maze": false,
+    "maze": true,
     "size": 10,
     "wrap": true
   }
